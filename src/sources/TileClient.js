@@ -25,6 +25,10 @@ export default class TileClient {
         return this._getTiles(tiles, urlToDataframeTransformer);
     }
 
+    removeFromCache (key) {
+        this._cache.del(key);
+    }
+
     free () {
         this._cache.free();
         this._cache = new DataframeCache();
@@ -48,7 +52,7 @@ export default class TileClient {
 
             const completedDataframes = await Promise.all(
                 tiles.map(({ x, y, z }) => {
-                    return this._cache.get(`${x},${y},${z}`, () => this._requestDataframe(x, y, z, urlToDataframeTransformer)).then(dataframe => {
+                    return this._cache.get(`${x},${y},${z}`, () => this._requestDataframe(x, y, z, urlToDataframeTransformer, tiles)).then(dataframe => { // `${x},${y},${z}`
                         dataframe.orderID = x + y / 1000;
                         return dataframe;
                     });
@@ -74,9 +78,9 @@ export default class TileClient {
         return _promise;
     }
 
-    async _requestDataframe (x, y, z, urlToDataframeTransformer) {
+    async _requestDataframe (x, y, z, urlToDataframeTransformer, tiles) {
         const url = this._getTileUrl(x, y, z);
-        const dataframe = await urlToDataframeTransformer(x, y, z, url);
+        const dataframe = await urlToDataframeTransformer(x, y, z, url, tiles);
         if (!dataframe.empty) {
             this._addDataframe(dataframe);
         }

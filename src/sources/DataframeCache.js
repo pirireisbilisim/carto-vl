@@ -31,6 +31,10 @@ export default class DataframeCache {
         return dataframePromise;
     }
 
+    del (key) {
+        this._cache.del(key);
+    }
+
     free () {
         this._cache.reset();
     }

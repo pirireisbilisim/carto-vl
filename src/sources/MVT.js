@@ -80,11 +80,15 @@ export default class MVT extends Base {
     }
 
     _receiveMessageFromWorker (event) {
-        const { mID, dataframe } = event.data;
-        if (!dataframe.empty) {
-            this._updateMetadataWith(dataframe);
+        const { mID, dataframe, type, key } = event.data;
+        if (type === 'abort') this._tileClient.removeFromCache(key);
+
+        if (dataframe) {
+            if (!dataframe.empty) {
+                this._updateMetadataWith(dataframe);
+            }
+            this._workerDispatch[mID](dataframe);
         }
-        this._workerDispatch[mID](dataframe);
     }
 
     _updateMetadataWith (dataframe) {
@@ -120,10 +124,10 @@ export default class MVT extends Base {
         );
     }
 
-    _urlToDataframeTransformer (x, y, z, url) {
+    _urlToDataframeTransformer (x, y, z, url, tiles) {
         return new Promise(resolve => {
             const validUrl = this._validUrlForWorker(url);
-            this._postMessageToWorker({ x, y, z }, validUrl);
+            this._postMessageToWorker({ x, y, z }, validUrl, tiles);
 
             this._metadataSent = true;
             this._workerDispatch[this._mID] = resolve;
@@ -131,7 +135,7 @@ export default class MVT extends Base {
         });
     }
 
-    _postMessageToWorker ({ x, y, z }, url) {
+    _postMessageToWorker ({ x, y, z }, url, tiles) {
         this._worker.postMessage({
             x,
             y,
@@ -140,7 +144,8 @@ export default class MVT extends Base {
             layerID: this._options.layerID,
             metadata: this._metadataSent ? undefined : this._metadata,
             mID: this._mID,
-            workerName: this._workerName
+            workerName: this._workerName,
+            tiles
         });
     }
 

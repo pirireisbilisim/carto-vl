@@ -35,8 +35,9 @@
     const map = new mapboxgl.Map({
       container: 'map',
       style: carto.basemaps.voyager,
-      center: [-73.97720677029952, 40.77784846220871],
-      zoom: 13,
+      center: [32.866287, 39.925533],
+      zoom: 5,
+      hash: true
 
 
     });
@@ -67,25 +68,22 @@
         },
         body: JSON.stringify(mapConfig)
       });
+      const url = `https://servis.pirireis.com.tr/dremio/QPbf/{z}/{x}/{y}.pbf?q=select "t1"."DATA_E" as "DATA_E", "t1"."SHIP_NAME" as "SHIP_NAME", "t1"."SHIP_TYPE" as "SHIP_TYPE", "t1"."SPEED" as "SPEED", "t1"."SHIP_ID" as "SHIP_ID", "LAT", "LON" from "@admin"."MARINE_TRAFFIC_HISTORICAL" as "t1"&layername=marine_traffic_id&xyz=false&cache=true`
       const layergroup = await response.json();
       const tilejson = layergroup.metadata.tilejson.vector;
-      const source = new carto.source.MVT(tilejson.tiles, {
+      const source = new carto.source.MVT(url, {
         properties: {
-          numfloors: {
-            type: 'number'
-          },
-          cartodb_id: {
+          SHIP_ID: {
             type: 'number'
           }
         },
-        idProperty: 'cartodb_id',
+        idProperty: 'SHIP_ID',
       }, {
-        layerID: 'europeLayer',
+        layerID: 'marine_traffic_id',
         viewportZoomToSourceZoom: zoom => Math.min(Math.max(Math.ceil(zoom), 1), 11)
       });
 
       const viz = new carto.Viz(`
-        color: ramp(linear($numfloors, 0, 20), temps)
         strokeWidth: 0
       `);
 
