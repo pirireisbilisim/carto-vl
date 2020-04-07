@@ -81,7 +81,8 @@ export class MVTWorker {
         const params = {
             method: 'GET',
             responseType: 'arraybuffer',
-            cancelToken: source.token
+            cancelToken: source.token,
+            withCredentials: true
         };
 
         const promise = axios.get(url, params).then(res => res.data); // fetch(url, params).then(data => data);
